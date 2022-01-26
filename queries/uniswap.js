@@ -1,7 +1,13 @@
 import { gql } from 'graphql-request'
 
+/**
+ * VARIABLES
+ */
 export const ENDPOINT = `https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3`;
 
+/**
+ * QUERIES
+ */
 export const POOLS_FIRST_10 = gql`
     {
         pools(first:10){
@@ -20,7 +26,7 @@ export const POOLS_FIRST_10 = gql`
 
 export const HIGHEST_VOLUME_TOKENS = gql`
     {
-        tokens(first: 100, orderBy: volumeUSD, orderDirection:desc) {
+        tokens(first: 25, orderBy: volumeUSD, orderDirection:desc) {
           id
           symbol
           name
