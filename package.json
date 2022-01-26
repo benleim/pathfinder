@@ -2,6 +2,7 @@
   "name": "pathfinder",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@apollo/client": "^3.5.7"
+    "graphql": "^16.2.0",
+    "graphql-request": "^3.7.0"
   }
 }
