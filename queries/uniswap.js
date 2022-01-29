@@ -33,6 +33,19 @@ export const HIGHEST_VOLUME_TOKENS = gql`
         }
     }`
 
+export function fetch_pool(id) {
+  return gql`
+    {
+      pool(id: "${id}") {
+        token0 { id }
+        token1 { id }
+        token0Price
+        token1Price
+      }
+    }
+  `
+}
+
 export function token_whitelist_pools(id) {
   return gql`
     {
