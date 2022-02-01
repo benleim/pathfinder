@@ -1,15 +1,3 @@
-
-/** GRAPH
- *  {
- *      token_id: [
- *          { pool_id }
- *      ]
- *  }
- * 
- * PRICES
- * dict[token0][token1] = price
- */
-
 /**
  * Bi-directional Graph class
  */
@@ -18,6 +6,10 @@ class Graph {
     constructor() {
         this.adjList = new Map();
         this.edgeWeights = new Map();
+    }
+
+    getEdges(node) {
+        return this.adjList.get(node);
     }
 
     setEdgeWeight(node1, node2, weight) {
