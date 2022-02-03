@@ -19,26 +19,7 @@ export default function bellmanFord(graph, startVertex) {
       }
     });
   
-    // We need (|V| - 1) iterations.
-    // for (let iteration = 0; iteration < (graph.getAllVertices().length - 1); iteration += 1) {
-    //   // During each iteration go through all vertices.
-    //   Object.keys(distances).forEach((vertexKey) => {
-    //     const vertex = graph.getVertexByKey(vertexKey);
-  
-    //     // Go through all vertex edges.
-    //     graph.getNeighbors(vertex).forEach((neighbor) => {
-    //       const edge = graph.findEdge(vertex, neighbor);
-    //       // Find out if the distance to the neighbor is shorter in this iteration
-    //       // then in previous one.
-    //       const distanceToVertex = distances[vertex.getKey()];
-    //       const distanceToNeighbor = distanceToVertex + edge.weight;
-    //       if (distanceToNeighbor < distances[neighbor.getKey()]) {
-    //         distances[neighbor.getKey()] = distanceToNeighbor;
-    //         previousVertices[neighbor.getKey()] = vertex;
-    //       }
-    //     });
-    //   });
-    // }
+    // (|V| - 1) iterations
     for (let iter = 0; iter < (graph.getAllVertices().length - 1); iter += 1) {
       let edges = graph.getAllEdges();
       for (let edge of edges) {
@@ -60,18 +41,22 @@ export default function bellmanFord(graph, startVertex) {
         // let distNeighbor = (distances[from.value] + edge.weight)
         // console.log(`relaxed dist (iter=${iter}): ` + distNeighbor);
         if (distances[from.value] + edge.weight < distances[to.value]) {
+          // Logging
           console.log(`NEGATIVE EDGE WEIGHT CYCLE DETECTED`)
-          console.log(edge.getKey())
-          // distances[to.value] = -Infinity
-          // TODO: go thru the previousVertices to find cycle
+          console.log(`from: ${from.value}`)
+          console.log(`to: ${to.value}`)
+          
+          // Arbitrage value
+          let mev = 0;
+
           let curr = from;
           let index = 1;
-
           let cycleVertices = {};
+          cycleVertices[to.value] = index++;
 
           while (!cycleVertices[curr.value]) {
             cycleVertices[curr.value] = index++;
-            curr = previousVertices[to];
+            curr = previousVertices[curr];
           }
           cycleVertices[curr.value+'_'] = index;
 
