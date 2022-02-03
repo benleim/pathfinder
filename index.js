@@ -3,6 +3,7 @@ import * as UNISWAP from './queries/uniswap.js';
 import Graph from './graph_library/Graph.js';
 import GraphVertex from './graph_library/GraphVertex.js';
 import GraphEdge from './graph_library/GraphEdge.js';
+import bellmanFord from './bellman-ford.js';
 
 // Fetch most active tokens
 let mostActiveTokens = await request(UNISWAP.ENDPOINT, UNISWAP.HIGHEST_VOLUME_TOKENS);
@@ -40,16 +41,31 @@ for (let pool of pools) {
   let poolRequest = await request(UNISWAP.ENDPOINT, UNISWAP.fetch_pool(pool));
   let poolData = poolRequest.pool;
 
-  let vertex0 = g.getVertexByKey(poolData.token0.id)
-  let vertex1 = g.getVertexByKey(poolData.token1.id);
+  // Some whitelisted pools are inactive for whatever reason
+  if (poolData.token1Price != 0 && poolData.token0Price != 0) {
 
-  let forwardEdge = new GraphEdge(vertex0, vertex1, poolData.token1Price);
-  let backwardEdge = new GraphEdge(vertex1, vertex0, poolData.token0Price);
-  console.log(forwardEdge.toString());
-  console.log(backwardEdge.toString())
-  g.addEdge(forwardEdge);
-  g.addEdge(backwardEdge);
+    let vertex0 = g.getVertexByKey(poolData.token0.id)
+    let vertex1 = g.getVertexByKey(poolData.token1.id);
+
+    let forwardEdge = new GraphEdge(vertex0, vertex1, -Math.log(Number(poolData.token1Price)));
+    let backwardEdge = new GraphEdge(vertex1, vertex0, -Math.log(Number(poolData.token0Price)));
+
+    // Temporary solution to multiple pools per pair
+    try {
+      g.addEdge(forwardEdge);
+      g.addEdge(backwardEdge);
+
+      console.log(poolData.token0.symbol, poolData.token1.symbol, poolData.token0Price, poolData.token1Price)
+      console.log(`${poolData.token0.symbol} -> ${poolData.token1.symbol} = ${-Math.log(Number(poolData.token1Price))}`);
+      console.log(`${poolData.token1.symbol} -> ${poolData.token0.symbol} = ${-Math.log(Number(poolData.token0Price))}`);
+    } catch (error) {
+      console.log(`error adding pool`)
+    }
+
+  }
 }
 
-console.log(g);
-//TODO: Run route searching logic
+g.getAllVertices().forEach((vertex) => {
+  let result = bellmanFord(g, vertex);
+  console.log(result);
+})
