@@ -26,7 +26,7 @@ export const POOLS_FIRST_10 = gql`
 
 export const HIGHEST_VOLUME_TOKENS = gql`
     {
-        tokens(first: 10, skip: 0, orderBy: volumeUSD, orderDirection:desc) {
+        tokens(first: 8, skip: 0, orderBy: volumeUSD, orderDirection:desc) {
           id
           symbol
           name
@@ -41,6 +41,7 @@ export function fetch_pool(id) {
         token1 { id, symbol }
         token0Price
         token1Price
+        totalValueLockedUSD
       }
     }
   `

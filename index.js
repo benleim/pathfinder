@@ -1,9 +1,11 @@
 import { rawRequest, request } from 'graphql-request'
-import * as UNISWAP from './queries/uniswap.js';
+import * as UNISWAP from './dex_queries/uniswap.js';
 import Graph from './graph_library/Graph.js';
 import GraphVertex from './graph_library/GraphVertex.js';
 import GraphEdge from './graph_library/GraphEdge.js';
 import bellmanFord from './bellman-ford.js';
+
+const MIN_TVL = 1000;
 
 // Fetch most active tokens
 let mostActiveTokens = await request(UNISWAP.ENDPOINT, UNISWAP.HIGHEST_VOLUME_TOKENS);
@@ -13,7 +15,7 @@ let tokenIds = mostActiveTokens.tokens.map((t) => { return t.id });
 let tokenIdsSet = new Set(tokenIds); // For lookup
 
 // Add vertices to graph
-let g = new Graph();
+let g = new Graph(true);
 let pools = new Set();
 tokenIds.forEach(element => {
   g.addVertex(new GraphVertex(element))
@@ -41,7 +43,8 @@ for (let pool of pools) {
   let poolData = poolRequest.pool;
 
   // Some whitelisted pools are inactive for whatever reason
-  if (poolData.token1Price != 0 && poolData.token0Price != 0) {
+  // Pools exist with tiny TLV values
+  if (poolData.token1Price != 0 && poolData.token0Price != 0 && poolData.totalValueLockedUSD > MIN_TVL) {
 
     let vertex0 = g.getVertexByKey(poolData.token0.id)
     let vertex1 = g.getVertexByKey(poolData.token1.id);
