@@ -34,40 +34,38 @@ export default function bellmanFord(graph, startVertex) {
 
     // Detect negative cycle
     // for (let iter = 0; iter < (graph.getAllVertices().length - 1); iter += 1) {
-      let edges = graph.getAllEdges();
-      for (let edge of edges) {
-        let from = edge.startVertex;
-        let to = edge.endVertex;
-        // let distNeighbor = (distances[from.value] + edge.weight)
-        // console.log(`relaxed dist (iter=${iter}): ` + distNeighbor);
-        if (distances[from.value] + edge.weight < distances[to.value]) {
-          // Logging
-          console.log(`NEGATIVE EDGE WEIGHT CYCLE DETECTED`)
-          console.log(`from: ${from.value}`)
-          console.log(`to: ${to.value}`)
+    let edges = graph.getAllEdges();
+    let cyclePath = {};
+    for (let edge of edges) {
+      let from = edge.startVertex;
+      let to = edge.endVertex;
+      // let distNeighbor = (distances[from.value] + edge.weight)
+      // console.log(`relaxed dist (iter=${iter}): ` + distNeighbor);
+      if (distances[from.value] + edge.weight < distances[to.value]) {
+        // Logging
+        console.log(`NEGATIVE EDGE WEIGHT CYCLE DETECTED`)
+        console.log(`from: ${from.value}`)
+        console.log(`to: ${to.value}`)
           
-          // Arbitrage value
-          let mev = 0;
+        // Arbitrage value
+        let curr = from;
+        let index = 1;
+        cyclePath[to.value] = index++;
 
-          let curr = from;
-          let index = 1;
-          let cycleVertices = {};
-          cycleVertices[to.value] = index++;
-
-          while (!cycleVertices[curr.value]) {
-            cycleVertices[curr.value] = index++;
-            curr = previousVertices[curr];
-          }
-          cycleVertices[curr.value+'_'] = index;
-
-          console.log(cycleVertices)
-          break;
+        while (!cyclePath[curr.value]) {
+          cyclePath[curr.value] = index++;
+          curr = previousVertices[curr];
         }
+        cyclePath[curr.value+'_'] = index;
+
+        console.log(cyclePath)
+        break;
       }
-    // }
+    }
   
     return {
       distances,
       previousVertices,
+      cyclePath
     };
   }

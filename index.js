@@ -33,7 +33,6 @@ for (let id of tokenIds) {
     }
   }
 }
-console.log(pools)
 
 // Fetch prices
 for (let pool of pools) {
@@ -47,8 +46,11 @@ for (let pool of pools) {
     let vertex0 = g.getVertexByKey(poolData.token0.id)
     let vertex1 = g.getVertexByKey(poolData.token1.id);
 
-    let forwardEdge = new GraphEdge(vertex0, vertex1, -Math.log(Number(poolData.token1Price)));
-    let backwardEdge = new GraphEdge(vertex1, vertex0, -Math.log(Number(poolData.token0Price)));
+    // TODO: Adjust weight to factor in gas estimates
+    let token1Price = Number(poolData.token1Price);
+    let token0Price = Number(poolData.token0Price);
+    let forwardEdge = new GraphEdge(vertex0, vertex1, -Math.log(Number(token1Price)), token1Price);
+    let backwardEdge = new GraphEdge(vertex1, vertex0, -Math.log(Number(token0Price)), token0Price);
 
     // Temporary solution to multiple pools per pair
     try {
@@ -61,11 +63,37 @@ for (let pool of pools) {
     } catch (error) {
       console.log(`error adding pool`)
     }
-
   }
+}
+
+function calculatePathWeight(cycle) {
+  let path = new Array(Object.keys(cycle).length);
+  for (let key of Object.keys(cycle)) {
+    path[cycle[key] - 1] = key.replace('_','');
+  }
+  console.log(path, path.length);
+
+  let cycleWeight = 1.0;
+  // TODO: This assumes the cycle includes all nodes in object (not always true)
+  for (let index = 0; index < path.length - 1; index++) {
+    let indexNext = (Number(index)+1) % path.length
+    console.log(index, indexNext);
+    let endVertexKey = path[index];
+    let endVertex = g.getVertexByKey(endVertexKey);
+    let startVertexKey = path[(Number(index) + 1) % path.length];
+    let startVertex = g.getVertexByKey(startVertexKey);
+    let edge = g.findEdge(startVertex, endVertex);
+    console.log(`Start: ${startVertexKey} | End: ${endVertexKey}`)
+    console.log(`Adj edge weight: ${edge.weight} | Raw edge weight: ${edge.rawWeight} | ${edge.getKey()}`);
+    console.log(cycleWeight * edge.rawWeight)
+    cycleWeight *= edge.rawWeight;
+  }
+  return cycleWeight;
 }
 
 g.getAllVertices().forEach((vertex) => {
   let result = bellmanFord(g, vertex);
+  let cycleWeight = calculatePathWeight(result.cyclePath);
   console.log(result);
+  console.log(cycleWeight);
 })
