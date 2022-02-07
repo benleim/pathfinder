@@ -77,19 +77,22 @@ function calculatePathWeight(cycle) {
   console.log(path, path.length);
 
   let cycleWeight = 1.0;
-  // TODO: This assumes the cycle includes all nodes in object (not always true)
-  for (let index = 0; index < path.length - 1; index++) {
-    let indexNext = (Number(index)+1) % path.length
-    console.log(index, indexNext);
-    let endVertexKey = path[index];
-    let endVertex = g.getVertexByKey(endVertexKey);
-    let startVertexKey = path[(Number(index) + 1) % path.length];
-    let startVertex = g.getVertexByKey(startVertexKey);
+
+  for (let index = path.length - 1; index > 0; index--) {
+    let indexNext = (index == 0) ? path.length - 1 : index-1;
+    console.log(`new indices: ${index} ${indexNext}`);
+    let startVertex = g.getVertexByKey(path[index]);
+    let endVertex = g.getVertexByKey(path[indexNext]);
     let edge = g.findEdge(startVertex, endVertex);
-    console.log(`Start: ${startVertexKey} | End: ${endVertexKey}`)
+
+    console.log(`Start: ${startVertex.value} | End: ${endVertex.value}`)
     console.log(`Adj edge weight: ${edge.weight} | Raw edge weight: ${edge.rawWeight} | ${edge.getKey()}`);
     console.log(cycleWeight * edge.rawWeight)
+
     cycleWeight *= edge.rawWeight;
+
+    // Break if sub-cycle found
+    if (path[indexNext] === path[path.length - 1]) break;
   }
   return cycleWeight;
 }
@@ -98,5 +101,6 @@ g.getAllVertices().forEach((vertex) => {
   let result = bellmanFord(g, vertex);
   let cycleWeight = calculatePathWeight(result.cyclePath);
   console.log(result);
-  console.log(cycleWeight);
+  console.log(`Arbitrage: ${cycleWeight}`);
+  console.log('----------------------')
 })

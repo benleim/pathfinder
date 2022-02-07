@@ -58,7 +58,6 @@ export default function bellmanFord(graph, startVertex) {
         }
         cyclePath[curr.value+'_'] = index;
 
-        console.log(cyclePath)
         break;
       }
     }
