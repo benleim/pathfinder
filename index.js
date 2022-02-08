@@ -5,7 +5,8 @@ import GraphVertex from './graph_library/GraphVertex.js';
 import GraphEdge from './graph_library/GraphEdge.js';
 import bellmanFord from './bellman-ford.js';
 
-const MIN_TVL = 1000;
+// POOL - MINIMUM TOTAL VALUE LOCKED (USD)
+const MIN_TVL = 50_000;
 
 // Fetch most active tokens
 let mostActiveTokens = await request(UNISWAP.ENDPOINT, UNISWAP.HIGHEST_VOLUME_TOKENS);
