@@ -26,7 +26,7 @@ export const POOLS_FIRST_10 = gql`
 
 export const HIGHEST_VOLUME_TOKENS = gql`
     {
-        tokens(first: 10, orderBy: volumeUSD, orderDirection:desc) {
+        tokens(first: 12, orderBy: volumeUSD, orderDirection:desc) {
           id
           symbol
           name
