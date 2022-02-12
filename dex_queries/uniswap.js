@@ -24,14 +24,16 @@ export const POOLS_FIRST_10 = gql`
       }
     `
 
-export const HIGHEST_VOLUME_TOKENS = gql`
+export function HIGHEST_VOLUME_TOKENS(first, skip = 0) {
+  return gql`
     {
-        tokens(first: 12, orderBy: volumeUSD, orderDirection:desc) {
+        tokens(first: ${first}, skip: ${skip}, orderBy: volumeUSD, orderDirection:desc) {
           id
           symbol
           name
         }
     }`
+}
 
 export function fetch_pool(id) {
   return gql`
