@@ -8,9 +8,9 @@ export const ENDPOINT = `https://api.thegraph.com/subgraphs/name/uniswap/uniswap
 /**
  * QUERIES
  */
-export const POOLS_FIRST_10 = gql`
+export function POOLS(first, skip = 0) { gql`
     {
-        pools(first:10){
+        pools(first:${first}, skip: ${skip}){
           id
           token0 {
             id
@@ -23,11 +23,12 @@ export const POOLS_FIRST_10 = gql`
         }
       }
     `
+}
 
-export function HIGHEST_VOLUME_TOKENS(first, skip = 0) {
+export function HIGHEST_VOLUME_TOKENS(first, skip = 0, orderby = "volumeUSD", orderDirection = "desc") {
   return gql`
     {
-        tokens(first: ${first}, skip: ${skip}, orderBy: volumeUSD, orderDirection:desc) {
+        tokens(first: ${first}, skip: ${skip}, orderBy: ${orderby}, orderDirection:${orderDirection}) {
           id
           symbol
           name
