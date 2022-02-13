@@ -1,5 +1,6 @@
 import { request } from 'graphql-request'
 import * as UNISWAP from './dex_queries/uniswap.js';
+import * as SUSHISWAP from './dex_queries/sushiswap.js';
 import Graph from './graph_library/Graph.js';
 import GraphVertex from './graph_library/GraphVertex.js';
 import GraphEdge from './graph_library/GraphEdge.js';
@@ -116,6 +117,7 @@ async function main() {
 
   // Add vertices to graph
   let tokenIds = await fetchTokens(10);
+  console.log(SUSHISWAP.PAIRS(tokenIds));
   tokenIds.forEach(element => {
     g.addVertex(new GraphVertex(element))
   });

@@ -1,13 +1,7 @@
 import { gql } from 'graphql-request'
 
-/**
- * VARIABLES
- */
 export const ENDPOINT = `https://thegraph.com/explorer/subgraph/sushiswap/exchange`;
 
-/**
- * QUERIES
- */
 export function PAIR(id) {
     return gql`
       {
@@ -22,20 +16,20 @@ export function PAIR(id) {
     `
 }
 
-export function PAIRS(first, skip = 0) { 
+export function PAIRS(ids) { 
+    let idString = '[\"' + ids.join("\",\"") + "\"]";
     return gql`
-    {
-        pairs(first:${first}, skip: ${skip}){
-          id
-          token0 {
-            id
-            symbol
-          }
-          token1 {
-            id
-            symbol
-          }
-        }
+    query {
+        pairs (where: {
+            token0_in: ${idString},
+            token1_in: ${idString}
+        },
+    ) {
+        id
+        name
+        token0 {id}
+        token1 {id}
+    }
     }`
 }
 
