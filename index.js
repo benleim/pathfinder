@@ -82,42 +82,71 @@ async function fetchSushiswapPools(tokenIds) {
 }
 
 // Fetch prices
-async function fetchPoolPrices(g, pools) {
+async function fetchPoolPrices(g, pools, dex) {
+  console.log(pools);
   for (let pool of pools) {
-    console.log(pool)
-    let poolRequest = await request(UNISWAP.ENDPOINT, UNISWAP.fetch_pool(pool));
-    let poolData = poolRequest.pool;
+    console.log(dex, pool)
+    let DEX_ENDPOINT =  (dex === "UNISWAP_V3") ? UNISWAP.ENDPOINT :
+                        (dex === "SUSHISWAP") ? SUSHISWAP.ENDPOINT : "";
+    let DEX_QUERY =     (dex === "UNISWAP_V3") ? UNISWAP.fetch_pool(pool) :
+                        (dex === "SUSHISWAP") ? SUSHISWAP.PAIR(pool) : "";;
+
+    let poolRequest = await request(DEX_ENDPOINT, DEX_QUERY);
+    let poolData =  (dex === "UNISWAP_V3") ? poolRequest.pool :
+                    (dex === "SUSHISWAP") ? poolRequest.pair : [];
+    console.log(poolData);
 
     // Some whitelisted pools are inactive for whatever reason
     // Pools exist with tiny TLV values
-    if (poolData.token1Price != 0 && poolData.token0Price != 0 && poolData.totalValueLockedUSD > MIN_TVL) {
+    let reserves =  (dex === "UNISWAP_V3") ? Number(poolData.totalValueLockedUSD) : 
+                    (dex === "SUSHISWAP") ? Number(poolData.reserveUSD) : 0;
+    if (poolData.token1Price != 0 && poolData.token0Price != 0 && reserves > MIN_TVL) {
 
-      let vertex0 = g.getVertexByKey(poolData.token0.id)
+      let vertex0 = g.getVertexByKey(poolData.token0.id);
       let vertex1 = g.getVertexByKey(poolData.token1.id);
 
       // TODO: Adjust weight to factor in gas estimates
       let token1Price = Number(poolData.token1Price);
       let token0Price = Number(poolData.token0Price);
-      let forwardEdge = new GraphEdge(vertex0, vertex1, -Math.log(Number(token1Price)), token1Price, { dex: "UNISWAP_V3" });
-      let backwardEdge = new GraphEdge(vertex1, vertex0, -Math.log(Number(token0Price)), token0Price, { dex: "UNISWAP_V3" });
-      console.log(forwardEdge);
+      let forwardEdge = new GraphEdge(vertex0, vertex1, -Math.log(Number(token1Price)), token1Price, { dex: dex, address: pool });
+      let backwardEdge = new GraphEdge(vertex1, vertex0, -Math.log(Number(token0Price)), token0Price, { dex: dex, address: pool });
+      // console.log('new forward edge', forwardEdge);
+      // console.log('new backward edge', backwardEdge);
+
 
       // Temporary solution to multiple pools per pair
-      try {
-        g.addEdge(forwardEdge);
-        g.addEdge(backwardEdge);
+      // TODO: Check if edge exists, if yes, replace iff price is more favorable (allows cross-DEX)
+      let forwardEdgeExists = g.findEdge(vertex0, vertex1);
+      let backwardEdgeExists = g.findEdge(vertex1, vertex0);
+      // (forwardEdgeExists) ? console.log('existing forward edge: ', forwardEdgeExists) : null;
+      // (backwardEdgeExists) ? console.log('existing backward edge: ', backwardEdgeExists) : null;
 
-        console.log(poolData.token0.symbol, poolData.token1.symbol, poolData.token0Price, poolData.token1Price)
-        console.log(`${poolData.token0.symbol} -> ${poolData.token1.symbol} = ${-Math.log(Number(poolData.token1Price))}`);
-        console.log(`${poolData.token1.symbol} -> ${poolData.token0.symbol} = ${-Math.log(Number(poolData.token0Price))}`);
-      } catch (error) {
-        console.log(`error adding pool`)
+      if (forwardEdgeExists) {
+        if (forwardEdgeExists.rawWeight < forwardEdge.rawWeight) {
+          console.log(`replacing: ${poolData.token0.symbol}->${poolData.token1.symbol} from ${forwardEdgeExists.rawWeight} to ${forwardEdge.rawWeight}`)
+          g.deleteEdge(forwardEdgeExists);
+          g.addEdge(forwardEdge);
+        }
+      } else {
+        g.addEdge(forwardEdge);
+      }
+
+      if (backwardEdgeExists) {
+        if (backwardEdgeExists.rawWeight < backwardEdge.rawWeight) {
+          console.log(`replacing: ${poolData.token1.symbol}->${poolData.token0.symbol} from ${backwardEdgeExists.rawWeight} to ${backwardEdge.rawWeight}`)
+          g.deleteEdge(backwardEdgeExists);
+          g.addEdge(backwardEdge);
+        }
+      } else {
+        g.addEdge(backwardEdge);
       }
     }
   }
 }
 
 async function calcArbitrage(g) {
+  // TODO: Adapt Bellman-Ford logic to run second relaxation on EVERY edge
+  // in order to find every negative edge weight cycle. Missing some currently.
   g.getAllVertices().forEach((vertex) => {
     let result = bellmanFord(g, vertex);
     let cycleWeight = calculatePathWeight(g, result.cyclePath);
@@ -131,7 +160,7 @@ async function main() {
   let g = new Graph(true);
 
   // Add vertices to graph
-  let tokenIds = await fetchTokens(10);
+  let tokenIds = await fetchTokens(5);
   tokenIds.forEach(element => {
     g.addVertex(new GraphVertex(element))
   });
@@ -139,7 +168,9 @@ async function main() {
   let uniPools = await fetchUniswapPools(tokenIds);
   let sushiPools = await fetchSushiswapPools(tokenIds);
 
-  await fetchPoolPrices(g, uniPools);
+  await fetchPoolPrices(g, uniPools, "UNISWAP_V3");
+  await fetchPoolPrices(g, sushiPools, "SUSHISWAP");
+
   await calcArbitrage(g);
 }
 

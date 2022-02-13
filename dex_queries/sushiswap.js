@@ -10,7 +10,7 @@ export function PAIR(id) {
           token1 { id, symbol }
           token0Price
           token1Price
-          totalValueLockedUSD
+          reserveUSD
         }
       }
     `
