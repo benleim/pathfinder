@@ -5,12 +5,14 @@ export default class GraphEdge {
      * @param {GraphVertex} endVertex
      * @param {number} [weight=0]
      * @param {number} [rawWeight=0]
+     * @param {Object} metadata
      */
-    constructor(startVertex, endVertex, weight = 0, rawWeight = 0) {
+    constructor(startVertex, endVertex, weight = 0, rawWeight = 0, metadata) {
       this.startVertex = startVertex;
       this.endVertex = endVertex;
       this.weight = weight;
       this.rawWeight = rawWeight;
+      this.metadata = metadata;
     }
   
     /**

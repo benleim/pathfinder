@@ -65,8 +65,8 @@ async function fetchUniswapPools(tokenIds) {
   return pools;
 }
 
+// Fetch prices
 async function fetchPoolPrices(g, pools) {
-  // Fetch prices
   for (let pool of pools) {
     console.log(pool)
     let poolRequest = await request(UNISWAP.ENDPOINT, UNISWAP.fetch_pool(pool));
@@ -82,8 +82,9 @@ async function fetchPoolPrices(g, pools) {
       // TODO: Adjust weight to factor in gas estimates
       let token1Price = Number(poolData.token1Price);
       let token0Price = Number(poolData.token0Price);
-      let forwardEdge = new GraphEdge(vertex0, vertex1, -Math.log(Number(token1Price)), token1Price);
-      let backwardEdge = new GraphEdge(vertex1, vertex0, -Math.log(Number(token0Price)), token0Price);
+      let forwardEdge = new GraphEdge(vertex0, vertex1, -Math.log(Number(token1Price)), token1Price, { dex: "UNISWAP_V3" });
+      let backwardEdge = new GraphEdge(vertex1, vertex0, -Math.log(Number(token0Price)), token0Price, { dex: "UNISWAP_V3" });
+      console.log(forwardEdge);
 
       // Temporary solution to multiple pools per pair
       try {
