@@ -66,6 +66,21 @@ async function fetchUniswapPools(tokenIds) {
   return pools;
 }
 
+async function fetchSushiswapPools(tokenIds) {
+  let pools = new Set();
+  let tokenIdsSet = new Set(tokenIds);
+
+  // Fetch pools
+  let poolsDataRaw = await request(SUSHISWAP.ENDPOINT, SUSHISWAP.PAIRS(tokenIds));
+  let poolsData = poolsDataRaw.pairs;
+
+  // Filter to only
+  for (let pool of poolsData) {
+    pools.add(pool.id);
+  }
+  return pools;
+}
+
 // Fetch prices
 async function fetchPoolPrices(g, pools) {
   for (let pool of pools) {
@@ -117,14 +132,14 @@ async function main() {
 
   // Add vertices to graph
   let tokenIds = await fetchTokens(10);
-  console.log(SUSHISWAP.PAIRS(tokenIds));
   tokenIds.forEach(element => {
     g.addVertex(new GraphVertex(element))
   });
 
-  let pools = await fetchUniswapPools(tokenIds);
+  let uniPools = await fetchUniswapPools(tokenIds);
+  let sushiPools = await fetchSushiswapPools(tokenIds);
 
-  await fetchPoolPrices(g, pools);
+  await fetchPoolPrices(g, uniPools);
   await calcArbitrage(g);
 }
 
