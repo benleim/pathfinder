@@ -2,10 +2,10 @@
 A program for detecting cross-DEX arbitrage in live time.
 
 Current Features
-- Single DEX (Uniswap V3)
+- Multi DEX Support (Uniswap V3 + Sushiswap)
 
 Future Features
-- Multi-pool per pair
+- Other DEX
 - Cross DEX
 - L2
 - CEX
