@@ -35,12 +35,12 @@ export default function bellmanFord(graph, startVertex) {
     // Detect negative cycle
     // for (let iter = 0; iter < (graph.getAllVertices().length - 1); iter += 1) {
     let edges = graph.getAllEdges();
-    let cyclePath = {};
+    let cyclePaths = [];
+    let foundCycles = {};
     for (let edge of edges) {
+      let cyclePath = [];
       let from = edge.startVertex;
       let to = edge.endVertex;
-      // let distNeighbor = (distances[from.value] + edge.weight)
-      // console.log(`relaxed dist (iter=${iter}): ` + distNeighbor);
       if (distances[from.value] + edge.weight < distances[to.value]) {
         // Logging
         console.log(`NEGATIVE EDGE WEIGHT CYCLE DETECTED`)
@@ -57,14 +57,32 @@ export default function bellmanFord(graph, startVertex) {
           curr = previousVertices[curr];
         }
         cyclePath[curr.value+'_'] = index;
+        console.log(`found arb cycle`, cyclePath);
 
-        break;
+        // Remove non-cycle edges
+        let path = [];
+        for (let key of Object.keys(cyclePath)) { path.push(key.replace('_','')); }
+        path.reverse();
+        for (var i = 0; i < path.length; i++) {
+          if (i !== 0 && path[0] === path[i]) {
+            path = path.slice(0, i+1);
+            break;
+          }
+        }
+        console.log(`stripped cycle`, path);
+
+        // Ensure uniqueness of cycles
+        let uniquePath = path.join('');
+        if (!foundCycles[uniquePath]) {
+          cyclePaths.push(path);
+          foundCycles[uniquePath] = true;
+        }
       }
     }
   
     return {
       distances,
       previousVertices,
-      cyclePath
+      cyclePaths
     };
   }

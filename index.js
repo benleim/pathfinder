@@ -18,19 +18,13 @@ async function fetchTokens(first, skip = 0) {
 }
 
 function calculatePathWeight(g, cycle) {
-  let path = new Array(Object.keys(cycle).length);
-  for (let key of Object.keys(cycle)) {
-    path[cycle[key] - 1] = key.replace('_','');
-  }
-  console.log(path, path.length);
-
   let cycleWeight = 1.0;
-
-  for (let index = path.length - 1; index > 0; index--) {
-    let indexNext = (index == 0) ? path.length - 1 : index-1;
+  console.log(cycle.length);
+  for (let index = 0; index < cycle.length - 1; index++) {
+    let indexNext = index + 1;
     console.log(`new indices: ${index} ${indexNext}`);
-    let startVertex = g.getVertexByKey(path[index]);
-    let endVertex = g.getVertexByKey(path[indexNext]);
+    let startVertex = g.getVertexByKey(cycle[index]);
+    let endVertex = g.getVertexByKey(cycle[indexNext]);
     let edge = g.findEdge(startVertex, endVertex);
 
     console.log(`Start: ${startVertex.value} | End: ${endVertex.value}`)
@@ -38,9 +32,6 @@ function calculatePathWeight(g, cycle) {
     console.log(cycleWeight * edge.rawWeight)
 
     cycleWeight *= edge.rawWeight;
-
-    // Break if sub-cycle found
-    if (path[indexNext] === path[path.length - 1]) break;
   }
   return cycleWeight;
 }
@@ -149,10 +140,13 @@ async function calcArbitrage(g) {
   // in order to find every negative edge weight cycle. Missing some currently.
   g.getAllVertices().forEach((vertex) => {
     let result = bellmanFord(g, vertex);
-    let cycleWeight = calculatePathWeight(g, result.cyclePath);
-    console.log(result);
-    console.log(`Arbitrage: ${cycleWeight}`);
-    console.log('----------------------')
+    let cyclePaths = result.cyclePaths;
+    for (var cycle of cyclePaths) {
+      let cycleWeight = calculatePathWeight(g, cycle);
+      console.log(`cycle`, cycle);
+      console.log(`Arbitrage: ${cycleWeight}`);
+      console.log('----------------------')
+    }
   });
 }
 
@@ -160,7 +154,7 @@ async function main() {
   let g = new Graph(true);
 
   // Add vertices to graph
-  let tokenIds = await fetchTokens(5);
+  let tokenIds = await fetchTokens(10);
   tokenIds.forEach(element => {
     g.addVertex(new GraphVertex(element))
   });
