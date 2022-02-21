@@ -138,16 +138,21 @@ async function fetchPoolPrices(g, pools, dex) {
 async function calcArbitrage(g) {
   // TODO: Adapt Bellman-Ford logic to run second relaxation on EVERY edge
   // in order to find every negative edge weight cycle. Missing some currently.
+  let arbitrageData = [];
+  let uniqueCycle = {};
   g.getAllVertices().forEach((vertex) => {
     let result = bellmanFord(g, vertex);
     let cyclePaths = result.cyclePaths;
     for (var cycle of cyclePaths) {
+      let cycleString = cycle.join('');
       let cycleWeight = calculatePathWeight(g, cycle);
-      console.log(`cycle`, cycle);
-      console.log(`Arbitrage: ${cycleWeight}`);
-      console.log('----------------------')
+      if (!uniqueCycle[cycleString]) {
+        uniqueCycle[cycleString] = true;
+        arbitrageData.push({ cycle: cycle, cycleWeight: cycleWeight });
+      }
     }
   });
+  return arbitrageData;
 }
 
 async function main() {
@@ -165,7 +170,9 @@ async function main() {
   await fetchPoolPrices(g, uniPools, "UNISWAP_V3");
   await fetchPoolPrices(g, sushiPools, "SUSHISWAP");
 
-  await calcArbitrage(g);
+  let arbitrageData = await calcArbitrage(g);
+  console.log(arbitrageData);
+  console.log(arbitrageData.length);
 }
 
 main().catch(error => {
