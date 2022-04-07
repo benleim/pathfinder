@@ -29,6 +29,7 @@ function calculatePathWeight(g, cycle) {
 
     console.log(`Start: ${startVertex.value} | End: ${endVertex.value}`)
     console.log(`Adj edge weight: ${edge.weight} | Raw edge weight: ${edge.rawWeight} | ${edge.getKey()}`);
+    console.log(`DEX: ${edge.metadata.dex}`)
     console.log(cycleWeight * edge.rawWeight)
 
     cycleWeight *= edge.rawWeight;
@@ -101,16 +102,11 @@ async function fetchPoolPrices(g, pools, dex) {
       let token0Price = Number(poolData.token0Price);
       let forwardEdge = new GraphEdge(vertex0, vertex1, -Math.log(Number(token1Price)), token1Price, { dex: dex, address: pool });
       let backwardEdge = new GraphEdge(vertex1, vertex0, -Math.log(Number(token0Price)), token0Price, { dex: dex, address: pool });
-      // console.log('new forward edge', forwardEdge);
-      // console.log('new backward edge', backwardEdge);
-
 
       // Temporary solution to multiple pools per pair
       // TODO: Check if edge exists, if yes, replace iff price is more favorable (allows cross-DEX)
       let forwardEdgeExists = g.findEdge(vertex0, vertex1);
       let backwardEdgeExists = g.findEdge(vertex1, vertex0);
-      // (forwardEdgeExists) ? console.log('existing forward edge: ', forwardEdgeExists) : null;
-      // (backwardEdgeExists) ? console.log('existing backward edge: ', backwardEdgeExists) : null;
 
       if (forwardEdgeExists) {
         if (forwardEdgeExists.rawWeight < forwardEdge.rawWeight) {
@@ -135,9 +131,12 @@ async function fetchPoolPrices(g, pools, dex) {
   }
 }
 
+/**
+ * Calculates all arbitrage cycles in given graph
+ * @param {*} g - graph
+ * @returns array of cycles & negative cycle value
+ */
 async function calcArbitrage(g) {
-  // TODO: Adapt Bellman-Ford logic to run second relaxation on EVERY edge
-  // in order to find every negative edge weight cycle. Missing some currently.
   let arbitrageData = [];
   let uniqueCycle = {};
   g.getAllVertices().forEach((vertex) => {
@@ -156,10 +155,11 @@ async function calcArbitrage(g) {
 }
 
 async function main() {
+  let TOKENS_NUMBER = fetchParameters();
   let g = new Graph(true);
 
   // Add vertices to graph
-  let tokenIds = await fetchTokens(10);
+  let tokenIds = await fetchTokens(TOKENS_NUMBER);
   tokenIds.forEach(element => {
     g.addVertex(new GraphVertex(element))
   });
@@ -173,6 +173,10 @@ async function main() {
   let arbitrageData = await calcArbitrage(g);
   console.log(arbitrageData);
   console.log(arbitrageData.length);
+}
+
+function fetchParameters() {
+  return (process.argv.length == 3) ? process.argv[2] : 15;
 }
 
 main().catch(error => {
