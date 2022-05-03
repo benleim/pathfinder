@@ -5,8 +5,8 @@ Current Features
 - Multi DEX Support (Uniswap V3 + Sushiswap)
 
 Future Features
-- Other DEX
-- Cross DEX
-- L2
+- Other DEXs
 - CEX
+- L2
 - Price slippage
+- Gas cost
