@@ -12,6 +12,7 @@
     "commander": "^9.2.0",
     "graphql": "^16.2.0",
     "graphql-request": "^3.7.0",
+    "inquirer": "^8.2.4",
     "ts-node": "^10.7.0"
   }
 }

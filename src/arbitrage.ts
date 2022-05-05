@@ -152,7 +152,7 @@ async function calcArbitrage(g) {
   return arbitrageData;
 }
 
-async function main(numberTokens: number = 5) {
+async function main(numberTokens: number = 5, DEXs: Set<DEX>) {
   let g: Graph = new Graph(true);
 
   // Add vertices to graph
