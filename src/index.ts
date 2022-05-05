@@ -1,5 +1,4 @@
 import { request } from 'graphql-request'
-import * as C from 'constants';
 import * as UNISWAP from './dex_queries/uniswap';
 import * as SUSHISWAP from './dex_queries/sushiswap';
 
@@ -7,10 +6,7 @@ import Graph from './graph_library/Graph';
 import GraphVertex from './graph_library/GraphVertex';
 import GraphEdge from './graph_library/GraphEdge';
 import bellmanFord from './bellman-ford';
-import { DEX } from './constants';
-
-// POOL - MINIMUM TOTAL VALUE LOCKED (USD)
-const MIN_TVL = 50_000;
+import { DEX, MIN_TVL } from './constants';
 
 // Fetch most active tokens 
 async function fetchTokens(first, skip = 0) {
