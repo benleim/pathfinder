@@ -38,7 +38,7 @@ function calculatePathWeight(g, cycle) {
 }
 
 async function fetchUniswapPools(tokenIds) {
-  let pools = new Set();
+  let pools = new Set<string>();
   let tokenIdsSet = new Set(tokenIds);
 
   // Fetch whitelist pools
@@ -59,8 +59,7 @@ async function fetchUniswapPools(tokenIds) {
 }
 
 async function fetchSushiswapPools(tokenIds) {
-  let pools = new Set();
-  let tokenIdsSet = new Set(tokenIds);
+  let pools = new Set<string>();
 
   // Fetch pools
   let poolsDataRaw = await request(SUSHISWAP.ENDPOINT, SUSHISWAP.PAIRS(tokenIds));
@@ -74,9 +73,9 @@ async function fetchSushiswapPools(tokenIds) {
 }
 
 // Fetch prices
-async function fetchPoolPrices(g, pools, dex) {
+async function fetchPoolPrices(g: Graph, pools: Set<string>, dex) {
   console.log(pools);
-  for (let pool of pools) {
+  for (var pool of Array.from(pools.values())) {
     console.log(dex, pool)
     let DEX_ENDPOINT =  (dex === "UNISWAP_V3") ? UNISWAP.ENDPOINT :
                         (dex === "SUSHISWAP") ? SUSHISWAP.ENDPOINT : "";
@@ -164,8 +163,8 @@ async function main() {
     g.addVertex(new GraphVertex(element))
   });
 
-  let uniPools = await fetchUniswapPools(tokenIds);
-  let sushiPools = await fetchSushiswapPools(tokenIds);
+  let uniPools: Set<string> = await fetchUniswapPools(tokenIds);
+  let sushiPools: Set<string> = await fetchSushiswapPools(tokenIds);
 
   await fetchPoolPrices(g, uniPools, "UNISWAP_V3");
   await fetchPoolPrices(g, sushiPools, "SUSHISWAP");
