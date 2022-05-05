@@ -152,12 +152,11 @@ async function calcArbitrage(g) {
   return arbitrageData;
 }
 
-async function main() {
-  let TOKENS_NUMBER = fetchParameters();
+async function main(numberTokens: number = 5) {
   let g: Graph = new Graph(true);
 
   // Add vertices to graph
-  let tokenIds = await fetchTokens(TOKENS_NUMBER);
+  let tokenIds = await fetchTokens(numberTokens);
   tokenIds.forEach(element => {
     g.addVertex(new GraphVertex(element))
   });
@@ -183,10 +182,7 @@ function printGraphEdges(g) {
   }
 }
 
-function fetchParameters() {
-  return (process.argv.length == 3) ? process.argv[2] : 5; // default to 5 in absence
+// Exports
+export {
+  main
 }
-
-main().catch(error => {
-  console.log(error);
-});
