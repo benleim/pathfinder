@@ -1,12 +1,14 @@
+import GraphVertex from "./GraphVertex"
+
 // https://github.com/trekhleb/javascript-algorithms/blob/master/src/data-structures/graph/GraphEdge.js
 export default class GraphEdge {
-    /**
-     * @param {GraphVertex} startVertex
-     * @param {GraphVertex} endVertex
-     * @param {number} [weight=0]
-     * @param {number} [rawWeight=0]
-     * @param {Object} metadata
-     */
+
+    startVertex: GraphVertex
+    endVertex: GraphVertex
+    weight: number = 0
+    rawWeight: number = 0
+    metadata = {}
+
     constructor(startVertex, endVertex, weight = 0, rawWeight = 0, metadata) {
       this.startVertex = startVertex;
       this.endVertex = endVertex;

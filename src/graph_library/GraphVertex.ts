@@ -1,9 +1,11 @@
-import LinkedList from './LinkedList.js';
+import GraphEdge from './GraphEdge';
+import LinkedList from './LinkedList';
 
 export default class GraphVertex {
-  /**
-   * @param {*} value
-   */
+  
+  value;
+  edges: LinkedList
+
   constructor(value) {
     if (value === undefined) {
       throw new Error('Graph vertex must have a value');
@@ -102,7 +104,7 @@ export default class GraphVertex {
    * @param {GraphVertex} vertex
    * @returns {(GraphEdge|null)}
    */
-  findEdge(vertex) {
+  findEdge(vertex): GraphEdge|undefined {
     const edgeFinder = (edge) => {
       return edge.startVertex === vertex || edge.endVertex === vertex;
     };

@@ -4,6 +4,8 @@ export default class Comparator {
      * @param {function(a: *, b: *)} [compareFunction] - It may be custom compare function that, let's
      * say may compare custom objects together.
      */
+    compare: (a: any, b: any) => 0 | 1 | -1;
+
     constructor(compareFunction) {
       this.compare = compareFunction || Comparator.defaultCompareFunction;
     }

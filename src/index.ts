@@ -1,13 +1,12 @@
 import { request } from 'graphql-request'
-import * as UNISWAP from './dex_queries/uniswap.js';
-import * as SUSHISWAP from './dex_queries/sushiswap.js';
-import Graph from './graph_library/Graph.js';
-import GraphVertex from './graph_library/GraphVertex.js';
-import GraphEdge from './graph_library/GraphEdge.js';
-import bellmanFord from './bellman-ford.js';
+import * as UNISWAP from './dex_queries/uniswap';
+import * as SUSHISWAP from './dex_queries/sushiswap';
 
-// POOL - MINIMUM TOTAL VALUE LOCKED (USD)
-const MIN_TVL = 50_000;
+import Graph from './graph_library/Graph';
+import GraphVertex from './graph_library/GraphVertex';
+import GraphEdge from './graph_library/GraphEdge';
+import bellmanFord from './bellman-ford';
+import { DEX, MIN_TVL } from './constants';
 
 // Fetch most active tokens 
 async function fetchTokens(first, skip = 0) {
@@ -38,7 +37,7 @@ function calculatePathWeight(g, cycle) {
 }
 
 async function fetchUniswapPools(tokenIds) {
-  let pools = new Set();
+  let pools = new Set<string>();
   let tokenIdsSet = new Set(tokenIds);
 
   // Fetch whitelist pools
@@ -59,8 +58,7 @@ async function fetchUniswapPools(tokenIds) {
 }
 
 async function fetchSushiswapPools(tokenIds) {
-  let pools = new Set();
-  let tokenIdsSet = new Set(tokenIds);
+  let pools = new Set<string>();
 
   // Fetch pools
   let poolsDataRaw = await request(SUSHISWAP.ENDPOINT, SUSHISWAP.PAIRS(tokenIds));
@@ -74,24 +72,24 @@ async function fetchSushiswapPools(tokenIds) {
 }
 
 // Fetch prices
-async function fetchPoolPrices(g, pools, dex) {
+async function fetchPoolPrices(g: Graph, pools: Set<string>, dex: DEX) {
   console.log(pools);
-  for (let pool of pools) {
+  for (var pool of Array.from(pools.values())) {
     console.log(dex, pool)
-    let DEX_ENDPOINT =  (dex === "UNISWAP_V3") ? UNISWAP.ENDPOINT :
-                        (dex === "SUSHISWAP") ? SUSHISWAP.ENDPOINT : "";
-    let DEX_QUERY =     (dex === "UNISWAP_V3") ? UNISWAP.fetch_pool(pool) :
-                        (dex === "SUSHISWAP") ? SUSHISWAP.PAIR(pool) : "";;
+    let DEX_ENDPOINT =  (dex === DEX.UniswapV3) ? UNISWAP.ENDPOINT :
+                        (dex === DEX.Sushiswap) ? SUSHISWAP.ENDPOINT : "";
+    let DEX_QUERY =     (dex === DEX.UniswapV3) ? UNISWAP.fetch_pool(pool) :
+                        (dex === DEX.Sushiswap) ? SUSHISWAP.PAIR(pool) : "";;
 
     let poolRequest = await request(DEX_ENDPOINT, DEX_QUERY);
-    let poolData =  (dex === "UNISWAP_V3") ? poolRequest.pool :
-                    (dex === "SUSHISWAP") ? poolRequest.pair : [];
+    let poolData =  (dex === DEX.UniswapV3) ? poolRequest.pool :
+                    (dex === DEX.Sushiswap) ? poolRequest.pair : [];
     console.log(poolData);
 
     // Some whitelisted pools are inactive for whatever reason
     // Pools exist with tiny TLV values
-    let reserves =  (dex === "UNISWAP_V3") ? Number(poolData.totalValueLockedUSD) : 
-                    (dex === "SUSHISWAP") ? Number(poolData.reserveUSD) : 0;
+    let reserves =  (dex === DEX.UniswapV3) ? Number(poolData.totalValueLockedUSD) : 
+                    (dex === DEX.Sushiswap) ? Number(poolData.reserveUSD) : 0;
     if (poolData.token1Price != 0 && poolData.token0Price != 0 && reserves > MIN_TVL) {
 
       let vertex0 = g.getVertexByKey(poolData.token0.id);
@@ -156,7 +154,7 @@ async function calcArbitrage(g) {
 
 async function main() {
   let TOKENS_NUMBER = fetchParameters();
-  let g = new Graph(true);
+  let g: Graph = new Graph(true);
 
   // Add vertices to graph
   let tokenIds = await fetchTokens(TOKENS_NUMBER);
@@ -164,19 +162,29 @@ async function main() {
     g.addVertex(new GraphVertex(element))
   });
 
-  let uniPools = await fetchUniswapPools(tokenIds);
-  let sushiPools = await fetchSushiswapPools(tokenIds);
+  let uniPools: Set<string> = await fetchUniswapPools(tokenIds);
+  let sushiPools: Set<string> = await fetchSushiswapPools(tokenIds);
 
-  await fetchPoolPrices(g, uniPools, "UNISWAP_V3");
-  await fetchPoolPrices(g, sushiPools, "SUSHISWAP");
+  await fetchPoolPrices(g, uniPools, DEX.UniswapV3);
+  await fetchPoolPrices(g, sushiPools, DEX.Sushiswap);
 
   let arbitrageData = await calcArbitrage(g);
   console.log(arbitrageData);
   console.log(arbitrageData.length);
+
+  printGraphEdges(g);
+}
+
+// debugging stuff
+function printGraphEdges(g) {
+  let edges = g.getAllEdges();
+  for (let edge of edges) {
+    console.log(`${edge.startVertex} -> ${edge.endVertex} | ${edge.rawWeight} | DEX: ${edge.metadata.dex}`);
+  }
 }
 
 function fetchParameters() {
-  return (process.argv.length == 3) ? process.argv[2] : 15;
+  return (process.argv.length == 3) ? process.argv[2] : 5; // default to 5 in absence
 }
 
 main().catch(error => {
