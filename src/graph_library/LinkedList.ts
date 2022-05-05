@@ -1,17 +1,15 @@
-import LinkedListNode from './LinkedListNode.js';
-import Comparator from './Comparator.js';
+import LinkedListNode from './LinkedListNode';
+import Comparator from './Comparator';
 
 export default class LinkedList {
-  /**
-   * @param {Function} [comparatorFunction]
-   */
+  
+  head: LinkedListNode;
+  tail: LinkedListNode;
+  compare: Comparator;
+
   constructor(comparatorFunction) {
-    /** @var LinkedListNode */
     this.head = null;
-
-    /** @var LinkedListNode */
     this.tail = null;
-
     this.compare = new Comparator(comparatorFunction);
   }
 

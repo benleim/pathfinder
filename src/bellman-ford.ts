@@ -1,3 +1,6 @@
+import Graph from "./graph_library/Graph";
+import GraphVertex from "./graph_library/GraphVertex";
+
 /**
  * @param {Graph} graph
  * @param {GraphVertex} startVertex
@@ -5,7 +8,7 @@
  * 
  * https://github.com/trekhleb/javascript-algorithms/blob/master/src/algorithms/graph/bellman-ford/bellmanFord.js
  */
-export default function bellmanFord(graph, startVertex) {
+export default function bellmanFord(graph: Graph, startVertex: GraphVertex) {
     const distances = {};
     const previousVertices = {};
   
@@ -54,7 +57,7 @@ export default function bellmanFord(graph, startVertex) {
 
         while (!cyclePath[curr.value]) {
           cyclePath[curr.value] = index++;
-          curr = previousVertices[curr];
+          curr = previousVertices[curr.getKey()];
         }
         cyclePath[curr.value+'_'] = index;
         console.log(`found arb cycle`, cyclePath);

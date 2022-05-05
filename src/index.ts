@@ -1,10 +1,10 @@
 import { request } from 'graphql-request'
-import * as UNISWAP from './dex_queries/uniswap.js';
-import * as SUSHISWAP from './dex_queries/sushiswap.js';
-import Graph from './graph_library/Graph.js';
-import GraphVertex from './graph_library/GraphVertex.js';
-import GraphEdge from './graph_library/GraphEdge.js';
-import bellmanFord from './bellman-ford.js';
+const UNISWAP = require('./dex_queries/uniswap');
+import * as SUSHISWAP from './dex_queries/sushiswap';
+import Graph from './graph_library/Graph';
+import GraphVertex from './graph_library/GraphVertex';
+import GraphEdge from './graph_library/GraphEdge';
+import bellmanFord from './bellman-ford';
 
 // POOL - MINIMUM TOTAL VALUE LOCKED (USD)
 const MIN_TVL = 50_000;
@@ -156,7 +156,7 @@ async function calcArbitrage(g) {
 
 async function main() {
   let TOKENS_NUMBER = fetchParameters();
-  let g = new Graph(true);
+  let g: Graph = new Graph(true);
 
   // Add vertices to graph
   let tokenIds = await fetchTokens(TOKENS_NUMBER);
@@ -170,13 +170,24 @@ async function main() {
   await fetchPoolPrices(g, uniPools, "UNISWAP_V3");
   await fetchPoolPrices(g, sushiPools, "SUSHISWAP");
 
+  console.log(g);
   let arbitrageData = await calcArbitrage(g);
   console.log(arbitrageData);
   console.log(arbitrageData.length);
+
+  printGraphEdges(g);
+}
+
+// debugging stuff
+function printGraphEdges(g) {
+  let edges = g.getAllEdges();
+  for (let edge of edges) {
+    console.log(`${edge.startVertex} -> ${edge.endVertex} | ${edge.rawWeight} | DEX: ${edge.metadata.dex}`);
+  }
 }
 
 function fetchParameters() {
-  return (process.argv.length == 3) ? process.argv[2] : 15;
+  return (process.argv.length == 3) ? process.argv[2] : 5; // default to 5 in absence
 }
 
 main().catch(error => {

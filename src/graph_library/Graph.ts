@@ -1,11 +1,17 @@
+import GraphEdge from "./GraphEdge";
+import GraphVertex from "./GraphVertex";
+
 // https://github.com/trekhleb/javascript-algorithms/blob/master/src/data-structures/graph/Graph.js
 export default class Graph {
+
+    vertices = {};
+    edges = {};
+    isDirected: boolean = false;
+
     /**
      * @param {boolean} isDirected
      */
     constructor(isDirected = false) {
-      this.vertices = {};
-      this.edges = {};
       this.isDirected = isDirected;
     }
   
@@ -13,7 +19,7 @@ export default class Graph {
      * @param {GraphVertex} newVertex
      * @returns {Graph}
      */
-    addVertex(newVertex) {
+    addVertex(newVertex): Graph {
       this.vertices[newVertex.getKey()] = newVertex;
   
       return this;
@@ -23,7 +29,7 @@ export default class Graph {
      * @param {string} vertexKey
      * @returns GraphVertex
      */
-    getVertexByKey(vertexKey) {
+    getVertexByKey(vertexKey): GraphVertex {
       return this.vertices[vertexKey];
     }
   
@@ -31,21 +37,21 @@ export default class Graph {
      * @param {GraphVertex} vertex
      * @returns {GraphVertex[]}
      */
-    getNeighbors(vertex) {
+    getNeighbors(vertex): GraphVertex[] {
       return vertex.getNeighbors();
     }
   
     /**
      * @return {GraphVertex[]}
      */
-    getAllVertices() {
+    getAllVertices(): GraphVertex[] {
       return Object.values(this.vertices);
     }
   
     /**
      * @return {GraphEdge[]}
      */
-    getAllEdges() {
+    getAllEdges(): GraphEdge[] {
       return Object.values(this.edges);
     }
   
@@ -53,7 +59,7 @@ export default class Graph {
      * @param {GraphEdge} edge
      * @returns {Graph}
      */
-    addEdge(edge) {
+    addEdge(edge: GraphEdge): Graph {
       // Try to find and end start vertices.
       let startVertex = this.getVertexByKey(edge.startVertex.getKey());
       let endVertex = this.getVertexByKey(edge.endVertex.getKey());
@@ -93,7 +99,7 @@ export default class Graph {
     /**
      * @param {GraphEdge} edge
      */
-    deleteEdge(edge) {
+    deleteEdge(edge: GraphEdge) {
       // Delete edge from the list of edges.
       if (this.edges[edge.getKey()]) {
         delete this.edges[edge.getKey()];
@@ -114,7 +120,7 @@ export default class Graph {
      * @param {GraphVertex} endVertex
      * @return {(GraphEdge|null)}
      */
-    findEdge(startVertex, endVertex) {
+    findEdge(startVertex: GraphVertex, endVertex: GraphVertex): GraphEdge | undefined {
       const vertex = this.getVertexByKey(startVertex.getKey());
   
       if (!vertex) {
@@ -127,8 +133,8 @@ export default class Graph {
     /**
      * @return {number}
      */
-    getWeight() {
-      return this.getAllEdges().reduce((weight, graphEdge) => {
+    getWeight(): number {
+      return this.getAllEdges().reduce((weight: number, graphEdge: GraphEdge) => {
         return weight + graphEdge.weight;
       }, 0);
     }
@@ -137,7 +143,7 @@ export default class Graph {
      * Reverse all the edges in directed graph.
      * @return {Graph}
      */
-    reverse() {
+    reverse(): Graph {
       /** @param {GraphEdge} edge */
       this.getAllEdges().forEach((edge) => {
         // Delete straight edge from graph and from vertices.
@@ -192,7 +198,7 @@ export default class Graph {
     /**
      * @return {string}
      */
-    toString() {
+    toString(): string {
       return Object.keys(this.vertices).toString();
     }
 }
