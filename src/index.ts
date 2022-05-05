@@ -1,10 +1,13 @@
 import { request } from 'graphql-request'
-const UNISWAP = require('./dex_queries/uniswap');
+import * as C from 'constants';
+import * as UNISWAP from './dex_queries/uniswap';
 import * as SUSHISWAP from './dex_queries/sushiswap';
+
 import Graph from './graph_library/Graph';
 import GraphVertex from './graph_library/GraphVertex';
 import GraphEdge from './graph_library/GraphEdge';
 import bellmanFord from './bellman-ford';
+import { DEX } from './constants';
 
 // POOL - MINIMUM TOTAL VALUE LOCKED (USD)
 const MIN_TVL = 50_000;
@@ -73,24 +76,24 @@ async function fetchSushiswapPools(tokenIds) {
 }
 
 // Fetch prices
-async function fetchPoolPrices(g: Graph, pools: Set<string>, dex) {
+async function fetchPoolPrices(g: Graph, pools: Set<string>, dex: DEX) {
   console.log(pools);
   for (var pool of Array.from(pools.values())) {
     console.log(dex, pool)
-    let DEX_ENDPOINT =  (dex === "UNISWAP_V3") ? UNISWAP.ENDPOINT :
-                        (dex === "SUSHISWAP") ? SUSHISWAP.ENDPOINT : "";
-    let DEX_QUERY =     (dex === "UNISWAP_V3") ? UNISWAP.fetch_pool(pool) :
-                        (dex === "SUSHISWAP") ? SUSHISWAP.PAIR(pool) : "";;
+    let DEX_ENDPOINT =  (dex === DEX.UniswapV3) ? UNISWAP.ENDPOINT :
+                        (dex === DEX.Sushiswap) ? SUSHISWAP.ENDPOINT : "";
+    let DEX_QUERY =     (dex === DEX.UniswapV3) ? UNISWAP.fetch_pool(pool) :
+                        (dex === DEX.Sushiswap) ? SUSHISWAP.PAIR(pool) : "";;
 
     let poolRequest = await request(DEX_ENDPOINT, DEX_QUERY);
-    let poolData =  (dex === "UNISWAP_V3") ? poolRequest.pool :
-                    (dex === "SUSHISWAP") ? poolRequest.pair : [];
+    let poolData =  (dex === DEX.UniswapV3) ? poolRequest.pool :
+                    (dex === DEX.Sushiswap) ? poolRequest.pair : [];
     console.log(poolData);
 
     // Some whitelisted pools are inactive for whatever reason
     // Pools exist with tiny TLV values
-    let reserves =  (dex === "UNISWAP_V3") ? Number(poolData.totalValueLockedUSD) : 
-                    (dex === "SUSHISWAP") ? Number(poolData.reserveUSD) : 0;
+    let reserves =  (dex === DEX.UniswapV3) ? Number(poolData.totalValueLockedUSD) : 
+                    (dex === DEX.Sushiswap) ? Number(poolData.reserveUSD) : 0;
     if (poolData.token1Price != 0 && poolData.token0Price != 0 && reserves > MIN_TVL) {
 
       let vertex0 = g.getVertexByKey(poolData.token0.id);
@@ -166,10 +169,9 @@ async function main() {
   let uniPools: Set<string> = await fetchUniswapPools(tokenIds);
   let sushiPools: Set<string> = await fetchSushiswapPools(tokenIds);
 
-  await fetchPoolPrices(g, uniPools, "UNISWAP_V3");
-  await fetchPoolPrices(g, sushiPools, "SUSHISWAP");
+  await fetchPoolPrices(g, uniPools, DEX.UniswapV3);
+  await fetchPoolPrices(g, sushiPools, DEX.Sushiswap);
 
-  console.log(g);
   let arbitrageData = await calcArbitrage(g);
   console.log(arbitrageData);
   console.log(arbitrageData.length);
