@@ -34,7 +34,7 @@ program
             (dexAnswers.DEXs.includes('UniswapV3')) ? dexs.add(DEX.UniswapV3) : null;
             (dexAnswers.DEXs.includes('Sushiswap')) ? dexs.add(DEX.Sushiswap) : null;
         } else {
-            Object.keys(DEX).forEach((key) => dexs.add(key));
+            const keys = Object.keys(DEX).filter((v) => !isNaN(Number(v))).forEach((key, index) => { dexs.add(index); });
         }
         await ARB.main(numberTokens, dexs);
     })

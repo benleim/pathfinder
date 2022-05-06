@@ -9,8 +9,10 @@ import bellmanFord from './bellman-ford';
 import { DEX, MIN_TVL } from './constants';
 
 // Fetch most active tokens 
-async function fetchTokens(first, skip = 0) {
-  let mostActiveTokens = await request(UNISWAP.ENDPOINT, UNISWAP.HIGHEST_VOLUME_TOKENS(first));
+async function fetchTokens(first, skip = 0, dex: DEX) {
+  let dexEndpoint = (dex === DEX.UniswapV3) ? UNISWAP.ENDPOINT : SUSHISWAP.ENDPOINT;
+  let tokensQuery = (dex === DEX.UniswapV3) ? UNISWAP.HIGHEST_VOLUME_TOKENS(first) : SUSHISWAP.HIGHEST_VOLUME_TOKENS(first, skip);
+  let mostActiveTokens = await request(dexEndpoint, tokensQuery);
   console.log(mostActiveTokens)
 
   return mostActiveTokens.tokens.map((t) => { return t.id });
@@ -156,16 +158,22 @@ async function main(numberTokens: number = 5, DEXs: Set<DEX>) {
   let g: Graph = new Graph(true);
 
   // Add vertices to graph
-  let tokenIds = await fetchTokens(numberTokens);
+  let defaultDex: DEX = (DEXs.size === 1 && DEXs.has(DEX.Sushiswap)) ? DEX.Sushiswap :
+                        (DEXs.size === 1 && DEXs.has(DEX.UniswapV3)) ? DEX.UniswapV3 : DEX.UniswapV3;
+  let tokenIds = await fetchTokens(numberTokens, 0, defaultDex);
   tokenIds.forEach(element => {
     g.addVertex(new GraphVertex(element))
   });
 
-  let uniPools: Set<string> = await fetchUniswapPools(tokenIds);
-  let sushiPools: Set<string> = await fetchSushiswapPools(tokenIds);
-
-  await fetchPoolPrices(g, uniPools, DEX.UniswapV3);
-  await fetchPoolPrices(g, sushiPools, DEX.Sushiswap);
+  // Check which DEXs to arb
+  if (DEXs.has(DEX.UniswapV3)) {
+    let uniPools: Set<string> = await fetchUniswapPools(tokenIds);
+    await fetchPoolPrices(g, uniPools, DEX.UniswapV3);
+  }
+  if (DEXs.has(DEX.Sushiswap)) {
+    let sushiPools: Set<string> = await fetchSushiswapPools(tokenIds);
+    await fetchPoolPrices(g, sushiPools, DEX.Sushiswap);
+  }
 
   let arbitrageData = await calcArbitrage(g);
   console.log(arbitrageData);
