@@ -10,11 +10,12 @@ program
     .command('start')
     .option('--tokens <number>', 'number of most liquid tokens to consider')
     .option('--timeout <seconds>', 'polling timeout')
+    .option('-d --dex', 'select considered dexes')
     .description('begin searching for dex cycles repeatedly')
     .action(async (options) => {
         const timeout: number = (options.timeout) ? options.timeout * 1000 : DEFAULT_TIMEOUT;
         const numberTokens: number = (options.tokens) ? options.tokens : DEFAULT_TOKEN_NUMBER;
-        const dexs: Set<DEX> = new Set();
+        const dexs: Set<DEX> = await parseDexs(options);
         while (true) {
             await ARB.main(numberTokens, dexs);
             await sleep(timeout);
@@ -28,16 +29,21 @@ program
     .description('search once for dex cycles')
     .action(async (options) => {
         const numberTokens: number = (options.tokens) ? options.tokens : DEFAULT_TOKEN_NUMBER;
-        let dexs: Set<DEX> = new Set();
-        if (options.dex) {
-            const dexAnswers = await inquireDex();
-            (dexAnswers.DEXs.includes('UniswapV3')) ? dexs.add(DEX.UniswapV3) : null;
-            (dexAnswers.DEXs.includes('Sushiswap')) ? dexs.add(DEX.Sushiswap) : null;
-        } else {
-            const keys = Object.keys(DEX).filter((v) => !isNaN(Number(v))).forEach((key, index) => { dexs.add(index); });
-        }
+        const dexs: Set<DEX> = await parseDexs(options);
         await ARB.main(numberTokens, dexs);
     })
+
+async function parseDexs(options: any) {
+    let dexs: Set<DEX> = new Set();
+    if (options.dex) {
+        const dexAnswers = await inquireDex();
+        (dexAnswers.DEXs.includes('UniswapV3')) ? dexs.add(DEX.UniswapV3) : null;
+        (dexAnswers.DEXs.includes('Sushiswap')) ? dexs.add(DEX.Sushiswap) : null;
+    } else {
+        Object.keys(DEX).filter((v) => !isNaN(Number(v))).forEach((key, index) => { dexs.add(index); });
+    }
+    return dexs;
+}
 
 async function inquireDex() {
     return inquirer
