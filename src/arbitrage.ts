@@ -13,25 +13,25 @@ async function fetchTokens(first, skip = 0, dex: DEX) {
   let dexEndpoint = (dex === DEX.UniswapV3) ? UNISWAP.ENDPOINT : SUSHISWAP.ENDPOINT;
   let tokensQuery = (dex === DEX.UniswapV3) ? UNISWAP.HIGHEST_VOLUME_TOKENS(first) : SUSHISWAP.HIGHEST_VOLUME_TOKENS(first, skip);
   let mostActiveTokens = await request(dexEndpoint, tokensQuery);
-  console.log(mostActiveTokens)
+  console.log(`Tokens:`, mostActiveTokens.tokens)
 
   return mostActiveTokens.tokens.map((t) => { return t.id });
 }
 
 function calculatePathWeight(g, cycle) {
   let cycleWeight = 1.0;
-  console.log(cycle.length);
+  // console.log(cycle.length);
   for (let index = 0; index < cycle.length - 1; index++) {
     let indexNext = index + 1;
-    console.log(`new indices: ${index} ${indexNext}`);
+    // console.log(`new indices: ${index} ${indexNext}`);
     let startVertex = g.getVertexByKey(cycle[index]);
     let endVertex = g.getVertexByKey(cycle[indexNext]);
     let edge = g.findEdge(startVertex, endVertex);
 
-    console.log(`Start: ${startVertex.value} | End: ${endVertex.value}`)
-    console.log(`Adj edge weight: ${edge.weight} | Raw edge weight: ${edge.rawWeight} | ${edge.getKey()}`);
-    console.log(`DEX: ${edge.metadata.dex}`)
-    console.log(cycleWeight * edge.rawWeight)
+    // console.log(`Start: ${startVertex.value} | End: ${endVertex.value}`)
+    // console.log(`Adj edge weight: ${edge.weight} | Raw edge weight: ${edge.rawWeight} | ${edge.getKey()}`);
+    // console.log(`DEX: ${edge.metadata.dex}`)
+    // console.log(cycleWeight * edge.rawWeight)
 
     cycleWeight *= edge.rawWeight;
   }
@@ -74,10 +74,10 @@ async function fetchSushiswapPools(tokenIds) {
 }
 
 // Fetch prices
-async function fetchPoolPrices(g: Graph, pools: Set<string>, dex: DEX) {
-  console.log(pools);
+async function fetchPoolPrices(g: Graph, pools: Set<string>, dex: DEX, debug: boolean = false) {
+  if (debug) console.log(pools);
   for (var pool of Array.from(pools.values())) {
-    console.log(dex, pool)
+    if (debug) console.log(dex, pool) //debug
     let DEX_ENDPOINT =  (dex === DEX.UniswapV3) ? UNISWAP.ENDPOINT :
                         (dex === DEX.Sushiswap) ? SUSHISWAP.ENDPOINT : "";
     let DEX_QUERY =     (dex === DEX.UniswapV3) ? UNISWAP.fetch_pool(pool) :
@@ -86,7 +86,7 @@ async function fetchPoolPrices(g: Graph, pools: Set<string>, dex: DEX) {
     let poolRequest = await request(DEX_ENDPOINT, DEX_QUERY);
     let poolData =  (dex === DEX.UniswapV3) ? poolRequest.pool :
                     (dex === DEX.Sushiswap) ? poolRequest.pair : [];
-    console.log(poolData);
+    if (debug) console.log(poolData); //debug
 
     // Some whitelisted pools are inactive for whatever reason
     // Pools exist with tiny TLV values
@@ -110,7 +110,7 @@ async function fetchPoolPrices(g: Graph, pools: Set<string>, dex: DEX) {
 
       if (forwardEdgeExists) {
         if (forwardEdgeExists.rawWeight < forwardEdge.rawWeight) {
-          console.log(`replacing: ${poolData.token0.symbol}->${poolData.token1.symbol} from ${forwardEdgeExists.rawWeight} to ${forwardEdge.rawWeight}`)
+          if (debug) console.log(`replacing: ${poolData.token0.symbol}->${poolData.token1.symbol} from ${forwardEdgeExists.rawWeight} to ${forwardEdge.rawWeight}`)
           g.deleteEdge(forwardEdgeExists);
           g.addEdge(forwardEdge);
         }
@@ -120,7 +120,7 @@ async function fetchPoolPrices(g: Graph, pools: Set<string>, dex: DEX) {
 
       if (backwardEdgeExists) {
         if (backwardEdgeExists.rawWeight < backwardEdge.rawWeight) {
-          console.log(`replacing: ${poolData.token1.symbol}->${poolData.token0.symbol} from ${backwardEdgeExists.rawWeight} to ${backwardEdge.rawWeight}`)
+          if (debug) console.log(`replacing: ${poolData.token1.symbol}->${poolData.token0.symbol} from ${backwardEdgeExists.rawWeight} to ${backwardEdge.rawWeight}`)
           g.deleteEdge(backwardEdgeExists);
           g.addEdge(backwardEdge);
         }
@@ -154,7 +154,7 @@ async function calcArbitrage(g) {
   return arbitrageData;
 }
 
-async function main(numberTokens: number = 5, DEXs: Set<DEX>) {
+async function main(numberTokens: number = 5, DEXs: Set<DEX>, debug: boolean = false) {
   let g: Graph = new Graph(true);
 
   // Add vertices to graph
@@ -168,18 +168,18 @@ async function main(numberTokens: number = 5, DEXs: Set<DEX>) {
   // Check which DEXs to arb
   if (DEXs.has(DEX.UniswapV3)) {
     let uniPools: Set<string> = await fetchUniswapPools(tokenIds);
-    await fetchPoolPrices(g, uniPools, DEX.UniswapV3);
+    await fetchPoolPrices(g, uniPools, DEX.UniswapV3, debug);
   }
   if (DEXs.has(DEX.Sushiswap)) {
     let sushiPools: Set<string> = await fetchSushiswapPools(tokenIds);
-    await fetchPoolPrices(g, sushiPools, DEX.Sushiswap);
+    await fetchPoolPrices(g, sushiPools, DEX.Sushiswap, debug);
   }
 
   let arbitrageData = await calcArbitrage(g);
-  console.log(arbitrageData);
-  console.log(arbitrageData.length);
+  console.log(`Cycles:`, arbitrageData);
+  console.log(`There were ${arbitrageData.length} arbitrage cycles detected.`);
 
-  printGraphEdges(g);
+  // printGraphEdges(g);
 }
 
 // debugging stuff

@@ -46,9 +46,9 @@ export default function bellmanFord(graph: Graph, startVertex: GraphVertex) {
       let to = edge.endVertex;
       if (distances[from.value] + edge.weight < distances[to.value]) {
         // Logging
-        console.log(`NEGATIVE EDGE WEIGHT CYCLE DETECTED`)
-        console.log(`from: ${from.value}`)
-        console.log(`to: ${to.value}`)
+        // console.log(`NEGATIVE EDGE WEIGHT CYCLE DETECTED`)
+        // console.log(`from: ${from.value}`)
+        // console.log(`to: ${to.value}`)
           
         // Arbitrage value
         let curr = from;
@@ -60,7 +60,7 @@ export default function bellmanFord(graph: Graph, startVertex: GraphVertex) {
           curr = previousVertices[curr.getKey()];
         }
         cyclePath[curr.value+'_'] = index;
-        console.log(`found arb cycle`, cyclePath);
+        // console.log(`found arb cycle`, cyclePath);
 
         // Remove non-cycle edges
         let path = [];
@@ -72,7 +72,7 @@ export default function bellmanFord(graph: Graph, startVertex: GraphVertex) {
             break;
           }
         }
-        console.log(`stripped cycle`, path);
+        // console.log(`stripped cycle`, path);
 
         // Ensure uniqueness of cycles
         let uniquePath = path.join('');
