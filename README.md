@@ -1,5 +1,5 @@
 # Pathfinder
-A program for detecting cross-DEX arbitrage in live time.
+A command line interface (CLI) for quantifying & detecting DEX token pair arbitrage on the Ethereum blockchain.
 
 # ⚡️ Quick start
 First, install Node.js. Then, run the following:
