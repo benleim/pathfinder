@@ -5,7 +5,9 @@ A command line interface (CLI) for quantifying & detecting DEX token pair arbitr
 First, install Node.js. Then, run the following:
 ```
 npm install
+npm install ts-node -g
 ```
+
 
 # ⚙️ Commands & Options
 ### **`start`**
