@@ -6,6 +6,7 @@ First, install Node.js. Then, run the following:
 ```
 npm install
 npm install ts-node -g
+npm install typescript -g
 ```
 
 
