@@ -1,5 +1,5 @@
 # Pathfinder
-A command line interface (CLI) for quantifying & detecting DEX token pair arbitrage on the Ethereum blockchain.
+A command line interface (CLI) for quantifying & detecting DEX token pair arbitrage on the Ethereum blockchain. <br/> Currently supports UniswapV3 and Sushiswap.
 
 # ⚡️ Quick start
 First, install Node.js. Then, run the following:
