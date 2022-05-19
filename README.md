@@ -9,7 +9,6 @@ npm install ts-node -g
 npm install typescript -g
 ```
 
-
 # ⚙️ Commands & Options
 ### **`start`**
 
